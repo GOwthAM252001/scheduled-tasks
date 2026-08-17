@@ -1,38 +1,51 @@
-# To run and test the code you need to update 4 places:
-# 1. Change MY_EMAIL/MY_PASSWORD to your own details.
-# 2. Go to your email provider and make it allow less secure apps.
-# 3. Update the SMTP ADDRESS to match your email provider.
-# 4. Update birthdays.csv to contain today's month and day.
-# See the solution video in the 100 Days of Python Course for explainations.
-
-
-from datetime import datetime
-import pandas
-import random
+from datetime import  date
 import smtplib
+from email.message import EmailMessage
+import random
+import csv
 import os
 
-# import os and use it to get the Github repository secrets
+today_date = date.today()
+
+letter_files = ["letter_1.txt", "letter_2.txt", "letter_3.txt"]
+random_letter = random.choice(letter_files)
+
+dict_data = {}
+
+with open("birthdays.csv", "r") as f:
+    birthdays = csv.DictReader(f)
+
+    for row in birthdays:
+        day = row["day"]
+        month = row["month"]
+        year = row["year"]
+        name = row["name"]
+        email = row["email"]
+        DOB = f"{year}-{month}-{day}"
+        dict_data.update({name: DOB})
+
 MY_EMAIL = os.environ.get("MY_EMAIL")
 MY_PASSWORD = os.environ.get("MY_PASSWORD")
+recipient = email
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
+for key, value in dict_data.items():
+    if value == str(today_date):
+        # print(key)
+        with open(f"letter_templates/{random_letter}", "r") as f:
+            letter = f.read()
+            letter = letter.replace("[NAME]", key)
+        print(letter)
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"])                  : data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        contents = contents.replace("[NAME]", birthday_person["name"])
+        #configuring emails
+        msg = EmailMessage()
+        msg["Subject"] = f"{key}, It's your birthday!❤️"
+        msg["From"] = sender
+        msg["To"] = recipient
+        msg.set_content(letter)
 
-    with smtplib.SMTP("YOUR EMAIL PROVIDER SMTP SERVER ADDRESS") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
-            to_addrs=birthday_person["email"],
-            msg=f"Subject:Happy Birthday!\n\n{contents}"
-        )
+        # sending emails
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(sender, password)
+            smtp.send_message(msg)
+
+        print("Email sent successfully!")
