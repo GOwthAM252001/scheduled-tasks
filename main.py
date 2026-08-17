@@ -45,7 +45,7 @@ for key, value in dict_data.items():
 
         # sending emails
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(sender, password)
+            smtp.login(MY_EMAIL, MY_PASSWORD)
             smtp.send_message(msg)
 
         print("Email sent successfully!")
