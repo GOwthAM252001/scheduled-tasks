@@ -39,7 +39,7 @@ for key, value in dict_data.items():
         #configuring emails
         msg = EmailMessage()
         msg["Subject"] = f"{key}, It's your birthday!❤️"
-        msg["From"] = sender
+        msg["From"] = MY_EMAIL
         msg["To"] = recipient
         msg.set_content(letter)
 
